@@ -14,6 +14,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Add exception handling middleware (should be first in the pipeline)
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Add request/response logging middleware
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
+
+// Add token authentication middleware (after exception handling, before others)
+app.UseMiddleware<TokenAuthenticationMiddleware>();
+
 // Boilerplate for User Management API
 app.MapGet("/", () => "Welcome to the User Management API for TechHive Solutions!");
 
