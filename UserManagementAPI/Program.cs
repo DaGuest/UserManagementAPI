@@ -34,23 +34,47 @@ app.MapGet("/users/{id:int}", (int id) =>
     return user is not null ? Results.Ok(user) : Results.NotFound();
 });
 
-// POST: Add a new user
-app.MapPost("/users", (User user) =>
+// POST: Add a new user with robust validation
+app.MapPost("/users", async (HttpContext context) =>
 {
-    user.Id = users.Count > 0 ? users.Max(u => u.Id) + 1 : 1;
-    users.Add(user);
-    return Results.Created($"/users/{user.Id}", user);
+    try
+    {
+        var user = await context.Request.ReadFromJsonAsync<User>();
+        if (user == null || string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrWhiteSpace(user.Department) || string.IsNullOrWhiteSpace(user.Email))
+        {
+            return Results.BadRequest(new { error = "Invalid request: Name, Department, and Email are required." });
+        }
+        user.Id = users.Count > 0 ? users.Max(u => u.Id) + 1 : 1;
+        users.Add(user);
+        return Results.Created($"/users/{user.Id}", user);
+    }
+    catch (Exception)
+    {
+        return Results.BadRequest(new { error = "Invalid JSON or missing required fields." });
+    }
 });
 
-// PUT: Update an existing user
-app.MapPut("/users/{id:int}", (int id, User updatedUser) =>
+// PUT: Update an existing user with robust validation
+app.MapPut("/users/{id:int}", async (int id, HttpContext context) =>
 {
-    var user = users.FirstOrDefault(u => u.Id == id);
-    if (user is null) return Results.NotFound();
-    user.Name = updatedUser.Name;
-    user.Department = updatedUser.Department;
-    user.Email = updatedUser.Email;
-    return Results.Ok(user);
+    try
+    {
+        var updatedUser = await context.Request.ReadFromJsonAsync<User>();
+        if (updatedUser == null || string.IsNullOrWhiteSpace(updatedUser.Name) || string.IsNullOrWhiteSpace(updatedUser.Department) || string.IsNullOrWhiteSpace(updatedUser.Email))
+        {
+            return Results.BadRequest(new { error = "Invalid request: Name, Department, and Email are required." });
+        }
+        var user = users.FirstOrDefault(u => u.Id == id);
+        if (user is null) return Results.NotFound();
+        user.Name = updatedUser.Name;
+        user.Department = updatedUser.Department;
+        user.Email = updatedUser.Email;
+        return Results.Ok(user);
+    }
+    catch (Exception)
+    {
+        return Results.BadRequest(new { error = "Invalid JSON or missing required fields." });
+    }
 });
 
 // DELETE: Remove a user by ID
