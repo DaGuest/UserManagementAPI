@@ -4,47 +4,49 @@ using SafeVaultWebApp.Models;
 using SafeVaultWebApp.Data;
 using SafeVaultWebApp.Helpers;
 
-namespace SafeVaultWebApp.Controllers;
-
-public class HomeController : Controller
+namespace SafeVaultWebApp.Controllers
 {
-    private readonly SafeVaultDbContext _context;
 
-    public HomeController(SafeVaultDbContext context)
+    public class HomeController : Controller
     {
-        _context = context;
-    }
+        private readonly SafeVaultDbContext _context;
 
-    public IActionResult Index()
-    {
-        return View();
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    [HttpPost]
-    public IActionResult Submit(string username, string email)
-    {
-        (var isValid, string sanitizedUsername, string sanitizedEmail, string error) = ValidationHelpers.ValidateUserInput(username, email);
-        if (!isValid)
+        public HomeController(SafeVaultDbContext context)
         {
-            // Return error message to the view
-            return BadRequest(error);
+            _context = context;
         }
-        // Save to database
-        var user = new User { Username = sanitizedUsername, Email = sanitizedEmail };
-        _context.Users.Add(user);
-        _context.SaveChanges();
 
-        return Ok($"User saved: Username: {sanitizedUsername}, Email: {sanitizedEmail}");
-    }
+        public IActionResult Index()
+        {
+            return View();
+        }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Submit(string username, string email)
+        {
+            (var isValid, string sanitizedUsername, string sanitizedEmail, string error) = ValidationHelpers.ValidateUserInput(username, email);
+            if (!isValid)
+            {
+                // Return error message to the view
+                return BadRequest(error);
+            }
+            // Save to database
+            var user = new User { Username = sanitizedUsername, Email = sanitizedEmail };
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            return Ok($"User saved: Username: {sanitizedUsername}, Email: {sanitizedEmail}");
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
     }
 }
