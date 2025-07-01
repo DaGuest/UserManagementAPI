@@ -1,16 +1,18 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SafeVaultWebApp.Models;
+using SafeVaultWebApp.Data;
+using SafeVaultWebApp.Helpers;
 
 namespace SafeVaultWebApp.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly SafeVaultDbContext _context;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(SafeVaultDbContext context)
     {
-        _logger = logger;
+        _context = context;
     }
 
     public IActionResult Index()
@@ -21,6 +23,23 @@ public class HomeController : Controller
     public IActionResult Privacy()
     {
         return View();
+    }
+
+    [HttpPost]
+    public IActionResult Submit(string username, string email)
+    {
+        (var isValid, string sanitizedUsername, string sanitizedEmail, string error) = ValidationHelpers.ValidateUserInput(username, email);
+        if (!isValid)
+        {
+            // Return error message to the view
+            return BadRequest(error);
+        }
+        // Save to database
+        var user = new User { Username = sanitizedUsername, Email = sanitizedEmail };
+        _context.Users.Add(user);
+        _context.SaveChanges();
+
+        return Ok($"User saved: Username: {sanitizedUsername}, Email: {sanitizedEmail}");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
