@@ -11,6 +11,11 @@ namespace SafeVaultWebApp.Helpers
                 return (false, null, null, "Username and email are required.");
             }
 
+            if (Regex.IsMatch(username, @"[<>,/!@#$%^&*()~{}\[\],;:\']") || Regex.IsMatch(email, @"[<>/!#$%^&*()~{}\[\]],;:\'"))
+            {
+                return (false, null, null, "Username or email contain invalid charsacters.");
+            }
+
             // Remove potentially malicious characters (basic sanitization)
             string sanitizedUsername = Regex.Replace(username, @"[^a-zA-Z0-9_\-]", "");
             string sanitizedEmail = Regex.Replace(email, @"[^a-zA-Z0-9@._\-]", "");
