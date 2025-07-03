@@ -1,14 +1,18 @@
+using SafeVaultWebApp.Data;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+using SafeVaultWebApp.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Add EF Core DbContext for PostgreSQL
-builder.Services.AddDbContext<SafeVaultWebApp.Data.SafeVaultDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configure in-memory database for Identity
+builder.Services.AddDbContext<SafeVaultDbContext>(options =>
+    options.UseInMemoryDatabase("Users"));
+
+builder.Services.AddDefaultIdentity<User>()
+    .AddEntityFrameworkStores<SafeVaultDbContext>();
 
 var app = builder.Build();
 
@@ -22,6 +26,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

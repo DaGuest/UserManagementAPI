@@ -13,19 +13,15 @@ namespace SafeVaultWebApp.Tests
         [Test]
         public void Submit_ShouldRejectXssInjectionAttempt()
         {
-            // Arrange: Use in-memory database
-            var options = new DbContextOptionsBuilder<SafeVaultDbContext>()
-                .UseInMemoryDatabase(databaseName: "XssInjectionTestDb")
-                .Options;
-            using var context = new SafeVaultDbContext(options);
-            var controller = new HomeController(context);
+            var controller = new HomeController();
 
             // Simulate XSS input
             string maliciousUsername = "<script>alert('xss')</script>";
             string email = "user@example.com";
+            string password = "strong123456!";
 
             // Act
-            var result = controller.Submit(maliciousUsername, email);
+            var result = controller.Register(maliciousUsername, email, password);
 
             // Assert: Should return BadRequest
             ClassicAssert.IsInstanceOf<BadRequestObjectResult>(result);

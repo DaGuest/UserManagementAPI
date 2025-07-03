@@ -11,7 +11,7 @@ namespace SafeVaultWebApp.Helpers
                 return (false, null, null, "Username and email are required.");
             }
 
-            if (Regex.IsMatch(username, @"[<>,/!@#$%^&*()~{}\[\],;:\']") || Regex.IsMatch(email, @"[<>/!#$%^&*()~{}\[\]],;:\'"))
+            if (Regex.Match(username, @"[<>,/!@#$%^&*()~{}\[\],;:\']").Success || Regex.Match(email, @"[<>/!#$%^&*()~{}\[\]],;:\'").Success)
             {
                 return (false, null, null, "Username or email contain invalid charsacters.");
             }

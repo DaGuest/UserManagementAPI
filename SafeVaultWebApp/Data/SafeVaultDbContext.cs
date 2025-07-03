@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SafeVaultWebApp.Controllers;
 
 namespace SafeVaultWebApp.Data
 {
-    public class SafeVaultDbContext : DbContext
+    public class SafeVaultDbContext : IdentityDbContext<IdentityUser>
     {
         public SafeVaultDbContext(DbContextOptions<SafeVaultDbContext> options)
             : base(options)

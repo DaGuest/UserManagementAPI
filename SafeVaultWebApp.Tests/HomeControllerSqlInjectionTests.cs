@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using SafeVaultWebApp.Controllers;
 using SafeVaultWebApp.Data;
 using NUnit.Framework.Legacy;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace SafeVaultWebApp.Tests
 {
@@ -17,15 +20,15 @@ namespace SafeVaultWebApp.Tests
             var options = new DbContextOptionsBuilder<SafeVaultDbContext>()
                 .UseInMemoryDatabase(databaseName: "SqlInjectionTestDb")
                 .Options;
-            using var context = new SafeVaultDbContext(options);
-            var controller = new HomeController(context);
+            var controller = new HomeController();
 
             // Simulate SQL injection input
             string maliciousUsername = "admin'; DROP TABLE Users; --";
             string email = "attacker@example.com";
+            string password = "strong123456!";
 
             // Act
-            var result = controller.Submit(maliciousUsername, email);
+            var result = controller.Register(maliciousUsername, email, password);
 
             // Assert: Should return BadRequest
             ClassicAssert.IsInstanceOf<BadRequestObjectResult>(result);
