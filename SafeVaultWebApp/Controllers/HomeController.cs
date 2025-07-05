@@ -55,7 +55,7 @@ namespace SafeVaultWebApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult Register(string username, string email, string password)
+        public async Task<IActionResult> Register(string username, string email, string password)
         {
             (var isValid, string sanitizedUsername, string sanitizedEmail, string error) = ValidationHelpers.ValidateUserInput(username, email);
             if (!isValid)
@@ -71,16 +71,15 @@ namespace SafeVaultWebApp.Controllers
             // Hash the password
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
             // Save to database
-            var user = new User { Username = sanitizedUsername, Email = sanitizedEmail, PasswordHash = passwordHash };
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            var user = new User { Username = sanitizedUsername, UserName = sanitizedUsername, Email = sanitizedEmail, PasswordHash = passwordHash };
+            var result = await _userManager.CreateAsync(user, password);
             ViewBag.Success = "User registered successfully.";
             return RedirectToAction("UserProfile");
         }
 
         public IActionResult UserProfile()
         {
-            ViewBag.Username = User.Identity.Name;
+            ViewBag.Username = _userManager.GetUserName(User);
             return View();
         }
 

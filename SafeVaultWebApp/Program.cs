@@ -1,6 +1,7 @@
 using SafeVaultWebApp.Data;
 using Microsoft.EntityFrameworkCore;
 using SafeVaultWebApp.Controllers;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,9 +10,10 @@ builder.Services.AddControllersWithViews();
 
 // Configure in-memory database for Identity
 builder.Services.AddDbContext<SafeVaultDbContext>(options =>
-    options.UseInMemoryDatabase("Users"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDefaultIdentity<User>()
+builder.Services.AddDefaultIdentity<User>(options => { options.SignIn.RequireConfirmedAccount = true; options.Password.RequireDigit = false; options.Password.RequiredLength = 8; options.Password.RequireLowercase = false; options.Password.RequireNonAlphanumeric = false; options.Password.RequireUppercase = false; })
+    .AddRoles<IdentityRole>() // Add roles support
     .AddEntityFrameworkStores<SafeVaultDbContext>();
 
 var app = builder.Build();

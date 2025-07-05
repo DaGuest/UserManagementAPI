@@ -5,7 +5,7 @@ using SafeVaultWebApp.Controllers;
 
 namespace SafeVaultWebApp.Data
 {
-    public class SafeVaultDbContext : IdentityDbContext<IdentityUser>
+    public class SafeVaultDbContext : IdentityDbContext<User>
     {
         public SafeVaultDbContext(DbContextOptions<SafeVaultDbContext> options)
             : base(options)
