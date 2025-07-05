@@ -86,6 +86,7 @@ namespace SafeVaultWebApp.Controllers
                 ViewBag.Error = "User registration failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
                 return View();
             }
+            await _userManager.AddToRoleAsync(user, "User");
             var token = _tokenService.GenerateToken(sanitizedUsername);
             return RedirectToAction("Login", new { token });
         }
@@ -97,10 +98,28 @@ namespace SafeVaultWebApp.Controllers
             return View();
         }
 
+        [Authorize(Policy = "RequireAdmin")]
+        public IActionResult AdminPanel()
+        {
+            return View();
+        }
+
+        [Authorize(Policy = "RequireUser")]
+        public IActionResult UserDashboard()
+        {
+            return View();
+        }
+
+        [Authorize(Policy = "RequireGuest")]
+        public IActionResult GuestInfo()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
-} 
+}

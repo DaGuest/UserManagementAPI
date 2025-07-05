@@ -35,7 +35,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdmin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("RequireUser", policy => policy.RequireRole("User"));
+    options.AddPolicy("RequireGuest", policy => policy.RequireRole("Guest"));
+    // Example: combine roles or add custom requirements
+    options.AddPolicy("AdminOrUser", policy => policy.RequireRole("Admin", "User"));
+});
 
 var app = builder.Build();
 
