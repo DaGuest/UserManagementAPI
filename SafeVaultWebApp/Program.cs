@@ -2,11 +2,15 @@ using SafeVaultWebApp.Data;
 using Microsoft.EntityFrameworkCore;
 using SafeVaultWebApp.Controllers;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<TokenService>();
 
 // Configure in-memory database for Identity
 builder.Services.AddDbContext<SafeVaultDbContext>(options =>
@@ -16,7 +20,38 @@ builder.Services.AddDefaultIdentity<User>(options => { options.SignIn.RequireCon
     .AddRoles<IdentityRole>() // Add roles support
     .AddEntityFrameworkStores<SafeVaultDbContext>();
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
+
+// Ensure roles exist at startup
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    string[] roleNames = { "Admin", "User", "Guest" };
+    foreach (var roleName in roleNames)
+    {
+        if (!roleManager.RoleExistsAsync(roleName).Result)
+        {
+            roleManager.CreateAsync(new IdentityRole(roleName)).Wait();
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

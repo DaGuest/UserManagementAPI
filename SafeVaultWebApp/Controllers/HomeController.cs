@@ -13,11 +13,13 @@ namespace SafeVaultWebApp.Controllers
     {
         private readonly SafeVaultDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly TokenService _tokenService;
 
-        public HomeController(SafeVaultDbContext safeVaultDbContext, UserManager<User> userManager)
+        public HomeController(SafeVaultDbContext safeVaultDbContext, UserManager<User> userManager, TokenService tokenService)
         {
             _context = safeVaultDbContext;
             _userManager = userManager;
+            _tokenService = tokenService;
         }
 
         public IActionResult Index()
@@ -39,8 +41,14 @@ namespace SafeVaultWebApp.Controllers
         public IActionResult Login(string username, string password)
         {
             // Basic authentication logic (replace with secure password hashing in production)
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
-            if (user == null || password != "testpassword") // Replace with real password check
+            var user = _userManager.FindByNameAsync(username).Result;
+            if (user == null)
+            {
+                ViewBag.Error = "Invalid username or password.";
+                return View();
+            }
+            var passwordCheck = _userManager.CheckPasswordAsync(user, password).Result;
+            if (!passwordCheck) // Replace with real password check
             {
                 ViewBag.Error = "Invalid username or password.";
                 return View();
@@ -73,10 +81,16 @@ namespace SafeVaultWebApp.Controllers
             // Save to database
             var user = new User { Username = sanitizedUsername, UserName = sanitizedUsername, Email = sanitizedEmail, PasswordHash = passwordHash };
             var result = await _userManager.CreateAsync(user, password);
-            ViewBag.Success = "User registered successfully.";
-            return RedirectToAction("UserProfile");
+            if (!result.Succeeded)
+            {
+                ViewBag.Error = "User registration failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
+                return View();
+            }
+            var token = _tokenService.GenerateToken(sanitizedUsername);
+            return RedirectToAction("Login", new { token });
         }
 
+        [Authorize]
         public IActionResult UserProfile()
         {
             ViewBag.Username = _userManager.GetUserName(User);
